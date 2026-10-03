@@ -76,3 +76,88 @@ export async function createServerOrderReservation(
     };
   }
 }
+
+export interface PaymentRequestResult {
+  order_id: string;
+  authority: string;
+  payment_url: string;
+  amount_tomans: number;
+}
+
+export async function requestServerPayment(
+  orderId: string,
+  callbackUrl?: string,
+  token?: string
+): Promise<{ success: boolean; data?: PaymentRequestResult; error?: string }> {
+  try {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+    };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
+    const res = await fetch(`${API_BASE}/api/v1/payment/request`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        order_id: orderId,
+        callback_url: callbackUrl || (typeof window !== "undefined" ? `${window.location.origin}/checkout/callback` : "http://localhost:3000/checkout/callback"),
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      return {
+        success: false,
+        error: err.detail || `خطا در دریافت لینک پرداخت از درگاه (${res.status})`,
+      };
+    }
+
+    const data = await res.json();
+    return { success: true, data };
+  } catch {
+    return {
+      success: false,
+      error: "عدم برقراری ارتباط با سامانه درگاه پرداخت.",
+    };
+  }
+}
+
+export interface PaymentVerifyResult {
+  order_id: string;
+  status: string;
+  payment_ref_id: string;
+  total_amount_tomans: number;
+  message: string;
+}
+
+export async function verifyServerPayment(
+  authority: string,
+  status: string
+): Promise<{ success: boolean; data?: PaymentVerifyResult; error?: string }> {
+  try {
+    const res = await fetch(
+      `${API_BASE}/api/v1/payment/verify?Authority=${encodeURIComponent(authority)}&Status=${encodeURIComponent(status)}`,
+      {
+        headers: { "Accept": "application/json" },
+      }
+    );
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      return {
+        success: false,
+        error: err.detail || "تایید تراکنش توسط درگاه بانکی ناموفق بود.",
+      };
+    }
+
+    const data = await res.json();
+    return { success: true, data };
+  } catch {
+    return {
+      success: false,
+      error: "خطا در تایید اصالت پرداخت با سرور مرکزی.",
+    };
+  }
+}
+
