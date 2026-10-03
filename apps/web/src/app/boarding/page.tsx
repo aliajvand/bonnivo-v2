@@ -107,6 +107,7 @@ export default function BoardingPage() {
           </div>
         ))}
       </div>
+      </div>
     </FeatureFlagGuard>
   );
 }

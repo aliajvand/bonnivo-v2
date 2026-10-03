@@ -247,7 +247,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         assignedPetName: pet ? pet.name : undefined,
         assignedPetAvatar: pet ? pet.avatarUrl : undefined,
         selectedWeightText: variantWeight,
-        offerId: selectedOffer.id,
+        offerId: selectedOffer.id || selectedOffer.sellerId,
       };
 
       return [newItem, ...prev];
