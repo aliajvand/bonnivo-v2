@@ -1,0 +1,12 @@
+node_modules
+.next
+.git
+__pycache__
+*.pyc
+.pytest_cache
+.venv
+dist
+build
+.env*
+.bonyo
+structure.txt

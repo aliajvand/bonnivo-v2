@@ -1,0 +1,205 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Bonnivo Warm Near-White Light Palette (#F7F8F6 Canvas) */
+    --background: 84 7% 97%;            /* #F7F8F6 Warm Near-White */
+    --foreground: 160 25% 10%;          /* #0f1c16 Deep Forest Charcoal */
+
+    /* Surface & Container Tokens */
+    --surface: 0 0% 100%;               /* #FFFFFF Pure White Elevated Cards */
+    --surface-foreground: 160 25% 10%;
+    --surface-subtle: 84 10% 94%;       /* #eff1ec Soft Stone Surface */
+    --surface-elevated: 0 0% 100%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 160 25% 10%;
+
+    /* Brand Primary (Deep Emerald Bonnivo Green) */
+    --primary: 160 84% 34%;             /* Deep Emerald #0e9f6e */
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 161 94% 26%;       /* #097a54 */
+    --primary-light: 152 70% 94%;       /* Soft Mint #daf5e9 */
+
+    /* Secondary */
+    --secondary: 84 12% 91%;            /* Soft stone neutral */
+    --secondary-foreground: 160 25% 10%;
+
+    /* Metis Accent Blue */
+    --accent-blue: 215 80% 50%;
+    --accent-blue-foreground: 0 0% 100%;
+    --accent-blue-subtle: 214 95% 93%;
+
+    /* Semantic Status */
+    --success: 160 84% 34%;             /* Emerald */
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;              /* Amber */
+    --warning-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;           /* Rose */
+    --destructive-foreground: 0 0% 100%;
+
+    /* Muted & Accents */
+    --muted: 160 8% 46%;                /* Soft Forest Gray */
+    --muted-foreground: 160 8% 46%;
+    --accent: 152 70% 94%;
+    --accent-foreground: 161 94% 26%;
+
+    /* UI Outlines & Radiuses */
+    --border: 84 10% 89%;               /* Hairline warm stone border */
+    --input: 84 10% 89%;
+    --ring: 160 84% 34%;
+  }
+
+  .dark {
+    /* Deep Forest Organic Dark Palette (No excessive blue/slate) */
+    --background: 160 24% 7%;           /* #0c1712 Deep Forest Dark Canvas */
+    --foreground: 84 12% 96%;           /* #f4f6f2 Warm Off-White */
+
+    --surface: 160 18% 11%;             /* #12221b Deep Forest Surface */
+    --surface-foreground: 84 12% 96%;
+    --surface-subtle: 160 16% 15%;      /* #182d24 */
+    --surface-elevated: 160 16% 18%;
+
+    --card: 160 18% 11%;
+    --card-foreground: 84 12% 96%;
+
+    --primary: 160 75% 45%;             /* Luminous Emerald */
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 160 75% 40%;
+    --primary-light: 160 60% 15%;
+
+    --secondary: 160 16% 16%;
+    --secondary-foreground: 84 12% 96%;
+
+    --accent-blue: 215 80% 60%;
+    --accent-blue-foreground: 0 0% 100%;
+    --accent-blue-subtle: 215 50% 18%;
+
+    --success: 160 75% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --muted: 160 10% 65%;
+    --muted-foreground: 160 10% 65%;
+    --accent: 160 16% 16%;
+    --accent-foreground: 160 75% 45%;
+
+    --border: 160 16% 18%;
+    --input: 160 16% 18%;
+    --ring: 160 75% 45%;
+  }
+
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    direction: rtl;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased selection:bg-primary-light selection:text-primary;
+    line-height: 1.7;
+    min-height: 100vh;
+    overscroll-behavior-y: none;
+  }
+}
+
+/* Glassmorphism & Liquid UI Utilities matching iOS reference */
+@layer utilities {
+  .glass-pill {
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 10px 30px -8px rgba(15, 118, 110, 0.08), 0 2px 6px rgba(0, 0, 0, 0.02);
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    box-shadow: 0 12px 32px -10px rgba(0, 0, 0, 0.05);
+  }
+
+  .glass-card-hover {
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .glass-card-hover:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 20px 40px -12px rgba(15, 118, 110, 0.12);
+  }
+
+  .glass-dock {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(24px) saturate(190%);
+    -webkit-backdrop-filter: blur(24px) saturate(190%);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+
+  /* Safe Area Insets for iOS PWA and Notch Devices */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 1rem);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0.5rem);
+  }
+}
+
+/* Custom Minimal Persian Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted));
+}
+
+@keyframes floatIsland {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(0.4deg);
+  }
+}
+
+.animate-float-island {
+  animation: floatIsland 6s ease-in-out infinite;
+}
+
+@keyframes waveFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-wave-float {
+  animation: waveFloat 4s ease-in-out infinite;
+}
+
