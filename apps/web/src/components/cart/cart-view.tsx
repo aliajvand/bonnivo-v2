@@ -378,7 +378,7 @@ export function CartView() {
           <div className="glass-card rounded-3xl p-6 border border-border/80 shadow-md space-y-5">
             
             <h2 className="text-lg font-black text-foreground border-b border-border/60 pb-3">
-              خلاصه سفارش (Order Summary)
+              خلاصه سفارش
             </h2>
 
             {/* Real Coupon Entry Area (Item 12) */}

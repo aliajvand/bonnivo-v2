@@ -153,6 +153,7 @@ export function CheckoutView() {
   const [selectedSlotId, setSelectedSlotId] = useState<string>(dynamicTimeslots[0]?.id || "");
   const [paymentMethod, setPaymentMethod] = useState<"ZARINPAL_IPG" | "SNAP_PAY" | "WALLET">("ZARINPAL_IPG");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Restore form state from sessionStorage
   useEffect(() => {
@@ -204,11 +205,29 @@ export function CheckoutView() {
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
 
   const handleOpenPaymentGateway = async () => {
-    if (!fullName.trim() || !phoneNumber.trim() || !address.trim()) {
-      setErrorMessage("لطفاً نام تحویل‌گیرنده، شماره تماس و آدرس را کامل وارد نمایید.");
+    const errors: Record<string, string> = {};
+    if (!fullName.trim()) {
+      errors.fullName = "نام و نام خانوادگی تحویل‌گیرنده الزامی است.";
+    }
+    if (!phoneNumber.trim()) {
+      errors.phoneNumber = "شماره موبایل الزامی است.";
+    } else if (!/^09\d{9}$/.test(phoneNumber.trim())) {
+      errors.phoneNumber = "شماره همراه باید ۱۱ رقم با فرمت ...09 باشد.";
+    }
+    if (!district.trim()) {
+      errors.district = "شهر و محله تحویل الزامی است.";
+    }
+    if (!address.trim()) {
+      errors.address = "نشانی پستی دقیق الزامی است.";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setErrorMessage("لطفاً خطاهای مشخص‌شده در فرم آدرس را برطرف نمایید.");
       return;
     }
 
+    setFieldErrors({});
     setErrorMessage(null);
     setIsSubmittingOrder(true);
 
@@ -346,11 +365,25 @@ export function CheckoutView() {
                   <input
                     type="text"
                     value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="w-full bg-surface-subtle text-xs text-foreground p-3 rounded-2xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                    onChange={(e) => {
+                      setFullName(e.target.value);
+                      if (fieldErrors.fullName) setFieldErrors((prev) => ({ ...prev, fullName: "" }));
+                    }}
+                    className={cn(
+                      "w-full bg-surface-subtle text-xs text-foreground p-3 rounded-2xl border transition-all",
+                      fieldErrors.fullName
+                        ? "border-rose-500 focus:ring-rose-500/20"
+                        : "border-border focus:ring-primary/20 focus:border-primary"
+                    )}
                   />
                   <User className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
                 </div>
+                {fieldErrors.fullName && (
+                  <p className="text-[11px] text-rose-600 font-medium mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3 shrink-0" />
+                    <span>{fieldErrors.fullName}</span>
+                  </p>
+                )}
               </div>
 
               <div>
@@ -362,11 +395,25 @@ export function CheckoutView() {
                     type="tel"
                     dir="ltr"
                     value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    className="w-full bg-surface-subtle text-xs text-foreground p-3 pe-9 rounded-2xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-right font-mono transition-all"
+                    onChange={(e) => {
+                      setPhoneNumber(e.target.value);
+                      if (fieldErrors.phoneNumber) setFieldErrors((prev) => ({ ...prev, phoneNumber: "" }));
+                    }}
+                    className={cn(
+                      "w-full bg-surface-subtle text-xs text-foreground p-3 pe-9 rounded-2xl border text-right font-mono transition-all",
+                      fieldErrors.phoneNumber
+                        ? "border-rose-500 focus:ring-rose-500/20"
+                        : "border-border focus:ring-primary/20 focus:border-primary"
+                    )}
                   />
                   <Phone className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
                 </div>
+                {fieldErrors.phoneNumber && (
+                  <p className="text-[11px] text-rose-600 font-medium mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3 shrink-0" />
+                    <span>{fieldErrors.phoneNumber}</span>
+                  </p>
+                )}
               </div>
 
               <div className="sm:col-span-2">
@@ -376,10 +423,24 @@ export function CheckoutView() {
                 <input
                   type="text"
                   value={district}
-                  onChange={(e) => setDistrict(e.target.value)}
+                  onChange={(e) => {
+                    setDistrict(e.target.value);
+                    if (fieldErrors.district) setFieldErrors((prev) => ({ ...prev, district: "" }));
+                  }}
                   placeholder="مثلاً: سعادت‌آباد، نیاوران، یوسف‌آباد..."
-                  className="w-full bg-surface-subtle text-xs text-foreground p-3 rounded-2xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  className={cn(
+                    "w-full bg-surface-subtle text-xs text-foreground p-3 rounded-2xl border transition-all",
+                    fieldErrors.district
+                      ? "border-rose-500 focus:ring-rose-500/20"
+                      : "border-border focus:ring-primary/20 focus:border-primary"
+                  )}
                 />
+                {fieldErrors.district && (
+                  <p className="text-[11px] text-rose-600 font-medium mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3 shrink-0" />
+                    <span>{fieldErrors.district}</span>
+                  </p>
+                )}
               </div>
 
               <div className="sm:col-span-2">
@@ -389,9 +450,23 @@ export function CheckoutView() {
                 <textarea
                   rows={2}
                   value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  className="w-full bg-surface-subtle text-xs text-foreground p-3 rounded-2xl border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none transition-all"
+                  onChange={(e) => {
+                    setAddress(e.target.value);
+                    if (fieldErrors.address) setFieldErrors((prev) => ({ ...prev, address: "" }));
+                  }}
+                  className={cn(
+                    "w-full bg-surface-subtle text-xs text-foreground p-3 rounded-2xl border resize-none transition-all",
+                    fieldErrors.address
+                      ? "border-rose-500 focus:ring-rose-500/20"
+                      : "border-border focus:ring-primary/20 focus:border-primary"
+                  )}
                 />
+                {fieldErrors.address && (
+                  <p className="text-[11px] text-rose-600 font-medium mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3 shrink-0" />
+                    <span>{fieldErrors.address}</span>
+                  </p>
+                )}
               </div>
 
               <div className="sm:col-span-2">
