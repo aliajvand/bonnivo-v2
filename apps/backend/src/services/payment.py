@@ -25,7 +25,8 @@ class MockPaymentGateway(PaymentGateway):
     Mock adapter for CI, local tests and automated verification without external network dependency.
     """
     async def request_payment(self, amount_tomans: int, description: str, callback_url: str, mobile: Optional[str] = None) -> Tuple[bool, str, str]:
-        mock_authority = f"A00000000000000000000000000{amount_tomans % 100000:05d}"
+        import uuid
+        mock_authority = f"A0000000000000000000000000{uuid.uuid4().hex[:8]}"
         payment_url = f"/checkout/sandbox?Authority={mock_authority}&amount={amount_tomans}"
         return True, mock_authority, payment_url
 

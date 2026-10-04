@@ -5,15 +5,17 @@ declare module "@playwright/test" {
     locator(selector: string): Locator;
     content(): Promise<string>;
     waitForTimeout(timeout: number): Promise<void>;
+    waitForURL(url: string | RegExp, options?: any): Promise<void>;
   }
 
   export interface Locator {
     first(): Locator;
     nth(index: number): Locator;
     count(): Promise<number>;
-    isVisible(): Promise<boolean>;
+    isVisible(options?: any): Promise<boolean>;
     click(): Promise<void>;
     fill(value: string): Promise<void>;
+    innerText(): Promise<string>;
   }
 
   export interface TestContext {

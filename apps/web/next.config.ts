@@ -26,9 +26,9 @@ const nextConfig: NextConfig = {
     const csp = [
       "default-src 'self'",
       "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
-      "style-src 'self' 'unsafe-inline'",
+      "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
       "img-src 'self' data: blob: https://images.unsplash.com",
-      "font-src 'self' data:",
+      "font-src 'self' data: https://cdn.jsdelivr.net",
       "connect-src 'self' http://localhost:8000 http://127.0.0.1:8000 https://api.zarinpal.com https://sandbox.zarinpal.com",
       "frame-ancestors 'none'",
     ].join("; ");

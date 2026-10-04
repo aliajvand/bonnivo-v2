@@ -154,6 +154,7 @@ export function CheckoutView() {
   const [paymentMethod, setPaymentMethod] = useState<"ZARINPAL_IPG" | "SNAP_PAY" | "WALLET">("ZARINPAL_IPG");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
 
   // Restore form state from sessionStorage
   useEffect(() => {
@@ -201,8 +202,6 @@ export function CheckoutView() {
       </div>
     );
   }
-
-  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
 
   const handleOpenPaymentGateway = async () => {
     const errors: Record<string, string> = {};

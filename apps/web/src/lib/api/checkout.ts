@@ -42,20 +42,29 @@ export interface CheckoutReserveResult {
   reservation_expires_at: string;
 }
 
+function getAuthHeaders(token?: string, extraHeaders?: Record<string, string>): Record<string, string> {
+  const headers: Record<string, string> = { ...extraHeaders };
+  const resolvedToken = token || (typeof window !== "undefined" ? localStorage.getItem("bonnivo_access_token") : null);
+  if (resolvedToken) {
+    headers["Authorization"] = `Bearer ${resolvedToken}`;
+  }
+  return headers;
+}
+
 export async function createServerOrderReservation(
   payload: CheckoutReserveRequest,
   token?: string
 ): Promise<{ success: boolean; data?: CheckoutReserveResult; error?: string }> {
   try {
-    const headers: Record<string, string> = {
+    const headers = getAuthHeaders(token, {
       "Content-Type": "application/json",
       "Accept": "application/json",
-    };
-    if (token) headers["Authorization"] = `Bearer ${token}`;
+    });
 
     const res = await fetch(`${API_BASE}/checkout/reserve`, {
       method: "POST",
       headers,
+      credentials: "include",
       body: JSON.stringify(payload),
     });
 
@@ -90,15 +99,15 @@ export async function requestServerPayment(
   token?: string
 ): Promise<{ success: boolean; data?: PaymentRequestResult; error?: string }> {
   try {
-    const headers: Record<string, string> = {
+    const headers = getAuthHeaders(token, {
       "Content-Type": "application/json",
       "Accept": "application/json",
-    };
-    if (token) headers["Authorization"] = `Bearer ${token}`;
+    });
 
     const res = await fetch(`${API_BASE}/payment/request`, {
       method: "POST",
       headers,
+      credentials: "include",
       body: JSON.stringify({
         order_id: orderId,
         callback_url: callbackUrl || (typeof window !== "undefined" ? `${window.location.origin}/checkout/callback` : "http://localhost:3000/checkout/callback"),
@@ -140,6 +149,7 @@ export async function verifyServerPayment(
       `${API_BASE}/payment/verify?Authority=${encodeURIComponent(authority)}&Status=${encodeURIComponent(status)}`,
       {
         headers: { "Accept": "application/json" },
+        credentials: "include",
       }
     );
 
@@ -178,9 +188,8 @@ export async function fetchServerCart(
   token?: string
 ): Promise<{ success: boolean; data?: ServerCartItem[]; error?: string }> {
   try {
-    const headers: Record<string, string> = { Accept: "application/json" };
-    if (token) headers["Authorization"] = `Bearer ${token}`;
-    const res = await fetch(`${API_BASE}/checkout/cart`, { headers });
+    const headers = getAuthHeaders(token, { Accept: "application/json" });
+    const res = await fetch(`${API_BASE}/checkout/cart`, { headers, credentials: "include" });
     if (!res.ok) return { success: false, error: "Failed to fetch cart" };
     const data = await res.json();
     return { success: true, data };
@@ -194,14 +203,14 @@ export async function syncServerCart(
   token?: string
 ): Promise<{ success: boolean; data?: ServerCartItem[]; error?: string }> {
   try {
-    const headers: Record<string, string> = {
+    const headers = getAuthHeaders(token, {
       "Content-Type": "application/json",
       Accept: "application/json",
-    };
-    if (token) headers["Authorization"] = `Bearer ${token}`;
+    });
     const res = await fetch(`${API_BASE}/checkout/cart/sync`, {
       method: "POST",
       headers,
+      credentials: "include",
       body: JSON.stringify({ items }),
     });
     if (!res.ok) return { success: false, error: "Failed to sync cart" };
@@ -214,9 +223,8 @@ export async function syncServerCart(
 
 export async function clearServerCart(token?: string): Promise<{ success: boolean }> {
   try {
-    const headers: Record<string, string> = { Accept: "application/json" };
-    if (token) headers["Authorization"] = `Bearer ${token}`;
-    const res = await fetch(`${API_BASE}/checkout/cart`, { method: "DELETE", headers });
+    const headers = getAuthHeaders(token, { Accept: "application/json" });
+    const res = await fetch(`${API_BASE}/checkout/cart`, { method: "DELETE", headers, credentials: "include" });
     return { success: res.ok };
   } catch {
     return { success: false };

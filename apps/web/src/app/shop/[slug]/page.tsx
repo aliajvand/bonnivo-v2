@@ -98,11 +98,11 @@ export default function ProductDetailPage() {
 
   const effectivePrice = activeVariant
     ? activeVariant.discountedPriceToman || activeVariant.priceToman
-    : product.buyBoxOffer.discountedPriceToman || product.buyBoxOffer.priceToman;
+    : product.buyBoxOffer?.discountedPriceToman || product.buyBoxOffer?.priceToman || 1000000;
 
   const originalPrice = activeVariant
     ? activeVariant.priceToman
-    : product.buyBoxOffer.priceToman;
+    : product.buyBoxOffer?.priceToman || 1000000;
 
   // Handle Add to Cart
   const handleAddToCart = () => {

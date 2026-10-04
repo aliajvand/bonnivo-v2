@@ -162,6 +162,7 @@ export function ShopCatalogView() {
               isAvailable: (p.stock_quantity || 0) > 0,
               weightText: p.variants?.[0]?.title_fa || "بسته استاندارد",
               buyBoxOffer: {
+                id: p.buy_box_offer?.id || undefined,
                 sellerId: p.buy_box_offer?.seller_id || "seller-1",
                 storeNameFa: p.buy_box_offer?.store_name_fa || "انبار مرکزی بونیو",
                 priceToman: p.old_price_tomans || p.price_tomans || 1000000,

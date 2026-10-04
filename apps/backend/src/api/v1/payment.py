@@ -131,9 +131,10 @@ async def verify_payment(
         select(Order)
         .options(selectinload(Order.items))
         .where(Order.payment_authority == Authority)
+        .order_by(Order.created_at.desc())
     )
     result = await db.execute(query)
-    order = result.scalar_one_or_none()
+    order = result.scalars().first()
 
     if not order:
         raise HTTPException(
