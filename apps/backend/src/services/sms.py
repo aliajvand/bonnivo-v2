@@ -65,7 +65,7 @@ class SmsIrAdapter(SmsProviderInterface):
         self.template_id = template_id or os.getenv("SMSIR_TEMPLATE_ID") or os.getenv("SMS_IR_TEMPLATE_ID")
         self.test_phone = os.getenv("TEST_PHONE") or os.getenv("SMS_TEST_PHONE")
         self.send_count = 0
-        self.max_test_sends = 5
+        self.max_test_sends = int(os.getenv("SMS_TEST_MAX_SENDS", "3"))
 
     async def send_otp(self, phone_number: str, code: str) -> bool:
         masked_phone = f"{phone_number[:4]}****{phone_number[-2:]}" if len(phone_number) >= 6 else phone_number
@@ -191,11 +191,19 @@ default_dispatcher = SmsDispatcher(default_sms_provider)
 
 
 def get_sms_provider() -> SmsProviderInterface:
+    import os
+    if os.environ.get("PYTEST_CURRENT_TEST"):
+        return default_sms_provider
+    from src.core.config import settings
+    is_prod = getattr(settings, "APP_ENV", "").lower() in ("production", "prod") or os.getenv("APP_ENV", "").lower() in ("production", "prod")
+    api_key = os.getenv("SMS_IR_API_KEY") or os.getenv("SMSIR_API_KEY") or getattr(settings, "SMS_IR_API_KEY", None)
+    if is_prod or (api_key and not getattr(settings, "DEMO_MODE", False)):
+        return SmsIrAdapter(api_key=api_key)
     return default_sms_provider
 
 
 def get_sms_dispatcher() -> SmsDispatcher:
-    return default_dispatcher
+    return SmsDispatcher(get_sms_provider())
 
 
 get_sms_service = get_sms_provider

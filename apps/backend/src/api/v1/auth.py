@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
 import random
 import re
+import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,6 +17,7 @@ from src.core.security import (
 )
 from src.models.user import User, UserRole, OtpVerification, UserSession
 from src.services.sms import get_sms_provider, SmsProviderInterface
+from src.fixtures.qa_seeds import QA_PERSONAS
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -60,7 +62,15 @@ async def request_otp(
         )
 
     # 2. Generate 5-digit code
-    code = f"{random.randint(10000, 99999)}"
+    is_qa = (
+        bool(settings.ALLOW_QA_ACCOUNTS)
+        and settings.ENVIRONMENT.lower() != "production"
+        and any(p["phone_number"] == phone for p in QA_PERSONAS)
+    )
+    if is_qa:
+        code = getattr(settings, "QA_DEFAULT_OTP", "12345")
+    else:
+        code = f"{random.randint(10000, 99999)}"
     code_hash = hash_otp_code(code)
     expires_at = datetime.now(timezone.utc) + timedelta(minutes=2)
 
@@ -92,6 +102,13 @@ async def verify_otp(
     phone = payload.phone_number
     code = payload.code
 
+    is_qa = (
+        bool(settings.ALLOW_QA_ACCOUNTS)
+        and settings.ENVIRONMENT.lower() != "production"
+        and any(p["phone_number"] == phone for p in QA_PERSONAS)
+    )
+    is_qa_match = is_qa and code == getattr(settings, "QA_DEFAULT_OTP", "12345")
+
     # 1. Find valid unexpired OTP record
     now = datetime.now(timezone.utc)
     stmt = (
@@ -106,23 +123,22 @@ async def verify_otp(
     result = await db.execute(stmt)
     otp_record = result.scalars().first()
 
-    if not otp_record:
+    if not otp_record and not is_qa_match:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid or expired verification code",
         )
 
     # 2. Verify code hash
-    if not verify_otp_code(code, otp_record.code_hash):
-        otp_record.attempts += 1
-        await db.commit()
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Incorrect verification code",
-        )
-
-    # Mark OTP as used
-    otp_record.is_verified = True
+    if otp_record:
+        if not is_qa_match and not verify_otp_code(code, otp_record.code_hash):
+            otp_record.attempts += 1
+            await db.commit()
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Incorrect verification code",
+            )
+        otp_record.is_verified = True
 
     # 3. Get or create User
     user_stmt = select(User).where(User.phone_number == phone)
@@ -130,10 +146,12 @@ async def verify_otp(
     user = user_res.scalar_one_or_none()
 
     if not user:
+        qa_persona = next((p for p in QA_PERSONAS if p["phone_number"] == phone), None) if is_qa else None
         user = User(
+            id=qa_persona["id"] if qa_persona else str(uuid.uuid4()),
             phone_number=phone,
-            full_name=None,
-            role=UserRole.PET_PARENT,
+            full_name=qa_persona["full_name"] if qa_persona else None,
+            role=qa_persona["role"] if qa_persona else UserRole.PET_PARENT,
             is_active=True,
         )
         db.add(user)
