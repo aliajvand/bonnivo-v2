@@ -31,12 +31,11 @@
 ```
 bonnivo-v2/
 ├── apps/
-│   ├── web/           # فرانت‌اند Next.js 15 App Router با Tailwind CSS و React 19
-│   ├── backend/       # بک‌اند ناهمگام FastAPI بر پایه Python 3.14 و SQLAlchemy 2.0
-│   └── mobile/        # کلاینت موبایل (Expo / React Native)
-├── packages/          # بسته‌ها و تایپ‌های اشتراکی مونو‌ریپو
-├── docs/              # مستندات و اسکرین‌شات‌های سیستمی
-└── reports/           # گزارش‌های تست نهایی و بازبینی مستقل کیفیت
+│   ├── web/           # وب‌اپلیکیشن یکپارچه، واکنش‌گرا و PWA بر پایه Next.js 15 و React 19
+│   └── backend/       # بک‌اند ناهمگام FastAPI بر پایه Python 3.14 و SQLAlchemy 2.0
+├── docs/              # مستندات و گالری ۵۶ اسکرین‌شات تمام‌صفحه
+├── nginx/             # پیکربندی سرور معکوس Nginx
+└── scripts/           # اسکریپت‌های اعتبارسنجی و اسکن امنیتی
 ```
 
 ### پکیج‌های فرانت‌اند (`apps/web/package.json`)

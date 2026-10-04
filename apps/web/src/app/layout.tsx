@@ -16,6 +16,7 @@ export const metadata: Metadata = {
   title: "بونیو | فروشگاه هوشمند و اکوسیستم زندگی پت",
   description: "بونیو، همراه روزانه زندگی پت شما — شناسنامه هوشمند، مراقبت روزانه و خرید آسان از معتبرترین پت‌شاپ‌ها",
   applicationName: "بونیو",
+  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
