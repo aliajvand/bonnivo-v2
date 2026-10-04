@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useMemo } from "react";
+import React, { createContext, useContext, useState, useEffect, useMemo, useRef } from "react";
 import { CartItem, SplitShipment, OrderConfirmation } from "@/types/cart";
 import { CatalogProduct, SellerOffer, ProductWeightVariant } from "@/types/catalog";
 import { mockCatalogProducts } from "@/data/mock-catalog";
@@ -17,6 +17,7 @@ interface CartContextType {
   shippingFeeToman: number;
   grandTotalToman: number;
   splitShipments: SplitShipment[];
+  isAdding: boolean;
   addItem: (
     product: CatalogProduct,
     offer?: SellerOffer,
@@ -44,6 +45,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [lastOrder, setLastOrderState] = useState<OrderConfirmation | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
+  const lastAddRef = useRef<{ key: string; time: number }>({ key: "", time: 0 });
 
   // Sync with LocalStorage on client mount
   useEffect(() => {
@@ -195,7 +198,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return shipments;
   }, [items]);
 
-  // Action: Add Item to Cart
+  // Action: Add Item to Cart (with debounce and submission lock)
   const addItem = (
     product: CatalogProduct,
     offer?: SellerOffer,
@@ -203,6 +206,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     selectedVariant?: ProductWeightVariant | null,
     quantity: number = 1
   ) => {
+    const now = Date.now();
+    const itemKey = `${product.id}-${offer?.sellerId || ""}-${selectedVariant?.labelFa || ""}`;
+    if (lastAddRef.current.key === itemKey && now - lastAddRef.current.time < 500) {
+      return; // Debounce rapid multi-clicks
+    }
+    lastAddRef.current = { key: itemKey, time: now };
+    setIsAdding(true);
+    setTimeout(() => setIsAdding(false), 400);
+
     const selectedOffer = offer || product.buyBoxOffer;
     const petId = targetPetId !== undefined ? targetPetId : (activePet ? activePet.id : null);
     const pet = petId ? pets.find((p) => p.id === petId) : null;
@@ -322,6 +334,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         shippingFeeToman,
         grandTotalToman,
         splitShipments,
+        isAdding,
         addItem,
         buyAgain,
         removeItem,

@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_
 
 from src.core.database import get_db
+from src.core.security import check_rate_limit
 from src.models.admin import AdminUser, AdminSession, AdminPasswordReset, AdminAuditLog
 from src.core.admin_security import (
     verify_password,
@@ -76,8 +77,15 @@ async def admin_login(
     response: Response,
     db: AsyncSession = Depends(get_db),
 ):
-    ip_addr = request.client.host if request.client else None
+    ip_addr = request.client.host if request.client else "unknown"
     user_agent = request.headers.get("user-agent")
+
+    # IP-based rate limiting on admin login
+    if not check_rate_limit(f"admin_login:{ip_addr}", max_requests=10, window_minutes=2):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="تعداد تلاش‌های ورود از این مبدا بیش از حد مجاز است. لطفاً پس از چند دقیقه مجدداً تلاش کنید.",
+        )
 
     # Find admin by username or email
     stmt = (

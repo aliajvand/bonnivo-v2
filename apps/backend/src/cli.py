@@ -8,6 +8,7 @@ if hasattr(sys.stdout, "reconfigure"):
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
+import getpass
 from src.core.database import AsyncSessionLocal
 from src.models.admin import AdminUser, AdminAuditLog
 from src.core.admin_security import hash_password
@@ -65,18 +66,26 @@ def main():
     create_parser = subparsers.add_parser("create-admin", help="ایجاد کاربر ادمین جدید")
     create_parser.add_argument("--username", required=True, help="نام کاربری مدیر")
     create_parser.add_argument("--email", required=True, help="ایمیل مدیر")
-    create_parser.add_argument("--password", required=True, help="گذرواژه (حداقل ۸ کاراکتر)")
     create_parser.add_argument("--full-name", required=True, help="نام و نام خانوادگی مدیر")
     create_parser.add_argument("--totp", action="store_true", help="فعال‌سازی ورود دو مرحله‌ای")
 
     args = parser.parse_args()
 
     if args.command == "create-admin":
+        password = getpass.getpass("گذرواژه ادمین را وارد کنید (حداقل ۸ کاراکتر): ")
+        confirm = getpass.getpass("تکرار گذرواژه: ")
+        if password != confirm:
+            print("[!] خطا: گذرواژه‌های وارد شده یکسان نیستند.")
+            sys.exit(1)
+        if len(password) < 8:
+            print("[!] خطا: گذرواژه ادمین باید حداقل ۸ کاراکتر باشد.")
+            sys.exit(1)
+
         asyncio.run(
             create_admin(
                 username=args.username,
                 email=args.email,
-                password=args.password,
+                password=password,
                 full_name=args.full_name,
                 totp_enabled=args.totp,
             )
