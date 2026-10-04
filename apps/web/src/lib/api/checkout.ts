@@ -4,7 +4,7 @@
  * coupon verification, and server-side draft order creation.
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+import { API_BASE } from "./client";
 
 export interface ReserveItemPayload {
   offer_id: string;
@@ -53,7 +53,7 @@ export async function createServerOrderReservation(
     };
     if (token) headers["Authorization"] = `Bearer ${token}`;
 
-    const res = await fetch(`${API_BASE}/api/v1/checkout/reserve`, {
+    const res = await fetch(`${API_BASE}/checkout/reserve`, {
       method: "POST",
       headers,
       body: JSON.stringify(payload),
@@ -96,7 +96,7 @@ export async function requestServerPayment(
     };
     if (token) headers["Authorization"] = `Bearer ${token}`;
 
-    const res = await fetch(`${API_BASE}/api/v1/payment/request`, {
+    const res = await fetch(`${API_BASE}/payment/request`, {
       method: "POST",
       headers,
       body: JSON.stringify({
@@ -137,7 +137,7 @@ export async function verifyServerPayment(
 ): Promise<{ success: boolean; data?: PaymentVerifyResult; error?: string }> {
   try {
     const res = await fetch(
-      `${API_BASE}/api/v1/payment/verify?Authority=${encodeURIComponent(authority)}&Status=${encodeURIComponent(status)}`,
+      `${API_BASE}/payment/verify?Authority=${encodeURIComponent(authority)}&Status=${encodeURIComponent(status)}`,
       {
         headers: { "Accept": "application/json" },
       }

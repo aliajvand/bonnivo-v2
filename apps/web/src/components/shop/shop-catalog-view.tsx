@@ -18,14 +18,14 @@ import {
   Scale,
   Plus,
   Minus,
-  Eye
+  Eye,
 } from "lucide-react";
-import { mockCatalogProducts } from "@/data/mock-catalog";
 import { CatalogProduct, ProductCategory, ProductWeightVariant } from "@/types/catalog";
 import { PetSpecies } from "@/types/pet";
 import { usePet } from "@/context/pet-context";
 import { useCart } from "@/context/cart-context";
 import { cn } from "@/lib/utils";
+import { API_BASE } from "@/lib/api/client";
 
 export function ShopCatalogView() {
   const { activePet, pets } = usePet();
@@ -84,7 +84,8 @@ export function ShopCatalogView() {
     setToastMessage(null);
   };
 
-  const [catalogProducts, setCatalogProducts] = useState<CatalogProduct[]>(mockCatalogProducts);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [catalogProducts, setCatalogProducts] = useState<CatalogProduct[]>([]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -99,8 +100,8 @@ export function ShopCatalogView() {
       if (c) setSelectedCategory(c as any);
 
       // Fetch distinct brands and live products from backend API
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
-      fetch(`${apiUrl}/catalog/brands`)
+      setIsLoading(true);
+      fetch(`${API_BASE}/catalog/brands`)
         .then((res) => (res.ok ? res.json() : []))
         .then((data: string[]) => {
           if (data && data.length > 0) {
@@ -109,8 +110,8 @@ export function ShopCatalogView() {
         })
         .catch(() => {});
 
-      fetch(`${apiUrl}/catalog/products`)
-        .then((res) => (res.ok ? res.json() : null))
+      fetch(`${API_BASE}/catalog/products`)
+        .then((res) => (res.ok ? res.json() : []))
         .then((data) => {
           if (Array.isArray(data) && data.length > 0) {
             const mapped: CatalogProduct[] = data.map((p: any) => ({
@@ -145,9 +146,17 @@ export function ShopCatalogView() {
               })),
             }));
             setCatalogProducts(mapped);
+          } else {
+            setCatalogProducts([]);
           }
         })
-        .catch(() => {});
+        .catch((err) => {
+          console.error("[Catalog] Error fetching products:", err);
+          setCatalogProducts([]);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
     }
 
     return () => {
@@ -511,7 +520,21 @@ export function ShopCatalogView() {
           </div>
 
           {/* Products Grid matching Reference Image */}
-          {filteredProducts.length > 0 ? (
+          {isLoading ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+              {Array.from({ length: 8 }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className="glass-card rounded-3xl p-3.5 sm:p-4 flex flex-col justify-between border border-border/70 animate-pulse"
+                >
+                  <div className="w-full aspect-square rounded-2xl bg-muted/20 mb-3" />
+                  <div className="h-4 bg-muted/20 rounded-md w-3/4 mb-2" />
+                  <div className="h-3 bg-muted/20 rounded-md w-1/2 mb-4" />
+                  <div className="h-8 bg-muted/20 rounded-xl w-full" />
+                </div>
+              ))}
+            </div>
+          ) : filteredProducts.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
               {filteredProducts.map((product) => {
                 const isFav = !!favorites[product.id];

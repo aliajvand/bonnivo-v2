@@ -3,7 +3,7 @@
  * Manages balance, transactions, deposits, and withdrawal requests with FastAPI backend.
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+import { API_BASE } from "./client";
 
 export interface WalletTransactionItem {
   id: string;
@@ -36,7 +36,7 @@ export async function fetchUserWallet(token?: string): Promise<WalletData | null
     const headers: Record<string, string> = { "Accept": "application/json" };
     if (token) headers["Authorization"] = `Bearer ${token}`;
 
-    const res = await fetch(`${API_BASE}/api/v1/wallet/me`, {
+    const res = await fetch(`${API_BASE}/wallet/me`, {
       headers,
       cache: "no-store",
     });
@@ -57,7 +57,7 @@ export async function depositWallet(amountTomans: number, token?: string): Promi
     };
     if (token) headers["Authorization"] = `Bearer ${token}`;
 
-    const res = await fetch(`${API_BASE}/api/v1/wallet/deposit`, {
+    const res = await fetch(`${API_BASE}/wallet/deposit`, {
       method: "POST",
       headers,
       body: JSON.stringify({ amount_tomans: amountTomans }),
@@ -85,7 +85,7 @@ export async function submitWithdrawalRequest(
     };
     if (token) headers["Authorization"] = `Bearer ${token}`;
 
-    const res = await fetch(`${API_BASE}/api/v1/wallet/withdraw`, {
+    const res = await fetch(`${API_BASE}/wallet/withdraw`, {
       method: "POST",
       headers,
       body: JSON.stringify(payload),

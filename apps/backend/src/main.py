@@ -40,9 +40,6 @@ from src.api.v1.feature_flags import router as feature_flags_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: create tables if sqlite dev mode
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
     yield
     # Shutdown
     await engine.dispose()

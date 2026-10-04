@@ -46,6 +46,8 @@ async def seed_all_production_data():
             db.add(cat)
             category_map[c["slug"]] = cat
 
+        await db.flush()
+
         # 2. Sellers & Seller Users
         sellers_data = [
             {
@@ -85,6 +87,7 @@ async def seed_all_production_data():
                 "commission_rate": 0.10,
             },
         ]
+        # First add and flush seller users
         for s in sellers_data:
             s_user = User(
                 id=s["user_id"],
@@ -95,9 +98,13 @@ async def seed_all_production_data():
             )
             db.add(s_user)
 
+        await db.flush()
+
+        # Next add and flush sellers referencing the flushed users
+        for s in sellers_data:
             seller = Seller(
                 id=s["id"],
-                user_id=s_user.id,
+                user_id=s["user_id"],
                 store_name_fa=s["store_name_fa"],
                 slug=s["slug"],
                 national_id=s["national_id"],
@@ -110,6 +117,8 @@ async def seed_all_production_data():
                 status="ACTIVE",
             )
             db.add(seller)
+
+        await db.flush()
 
         # 3. Canonical Products
         products_data = [
@@ -365,45 +374,48 @@ async def seed_all_production_data():
             )
             db.add(user)
 
-            # Seed Real Wallet for customer
-            if u["id"] == "usr-customer-01":
-                wallet = Wallet(
-                    id="wlt-customer-01",
-                    user_id=user.id,
-                    balance_tomans=450000,
-                )
-                db.add(wallet)
+        await db.flush()
 
-                tx1 = WalletTransaction(
-                    id="tx-wlt-001",
-                    wallet_id=wallet.id,
-                    amount_tomans=350000,
-                    transaction_type=TransactionType.CREDIT_REFUND,
-                    reference_id="APT-101",
-                    reference_type="APPOINTMENT",
-                    description="استرداد هزینه کنسلی ویزیت کلینیک آرا (عودت ۹۰٪ وجه)",
-                )
-                tx2 = WalletTransaction(
-                    id="tx-wlt-002",
-                    wallet_id=wallet.id,
-                    amount_tomans=200000,
-                    transaction_type=TransactionType.CREDIT_DEPOSIT,
-                    reference_id="SHP-882104",
-                    reference_type="PAYMENT",
-                    description="افزایش اعتبار موفق از طریق درگاه زرین‌پال شاپرک",
-                )
-                tx3 = WalletTransaction(
-                    id="tx-wlt-003",
-                    wallet_id=wallet.id,
-                    amount_tomans=-100000,
-                    transaction_type=TransactionType.DEBIT_PURCHASE,
-                    reference_id="BNY-748921",
-                    reference_type="ORDER",
-                    description="کسر وجه بابت سفارش محصولات غذایی بونیو",
-                )
-                db.add(tx1)
-                db.add(tx2)
-                db.add(tx3)
+        # Seed Real Wallet for customer
+        wallet = Wallet(
+            id="wlt-customer-01",
+            user_id="usr-customer-01",
+            balance_tomans=450000,
+        )
+        db.add(wallet)
+        await db.flush()
+
+        tx1 = WalletTransaction(
+            id="tx-wlt-001",
+            wallet_id=wallet.id,
+            amount_tomans=350000,
+            transaction_type=TransactionType.CREDIT_REFUND,
+            reference_id="APT-101",
+            reference_type="APPOINTMENT",
+            description="استرداد هزینه کنسلی ویزیت کلینیک آرا (عودت ۹۰٪ وجه)",
+        )
+        tx2 = WalletTransaction(
+            id="tx-wlt-002",
+            wallet_id=wallet.id,
+            amount_tomans=200000,
+            transaction_type=TransactionType.CREDIT_DEPOSIT,
+            reference_id="SHP-882104",
+            reference_type="PAYMENT",
+            description="افزایش اعتبار موفق از طریق درگاه زرین‌پال شاپرک",
+        )
+        tx3 = WalletTransaction(
+            id="tx-wlt-003",
+            wallet_id=wallet.id,
+            amount_tomans=-100000,
+            transaction_type=TransactionType.DEBIT_PURCHASE,
+            reference_id="BNY-748921",
+            reference_type="ORDER",
+            description="کسر وجه بابت سفارش محصولات غذایی بونیو",
+        )
+        db.add(tx1)
+        db.add(tx2)
+        db.add(tx3)
+        await db.flush()
 
         # 5. Seed Customer Pets & Care Tasks
         pets_seed = [

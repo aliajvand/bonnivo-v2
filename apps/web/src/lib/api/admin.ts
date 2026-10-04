@@ -2,8 +2,9 @@
  * Bonnivo Admin API Client
  * Secure communication with /api/v1/admin and /api/v1/admin/auth
  */
+import { API_BASE } from "./client";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+const API_BASE_URL = API_BASE;
 
 export interface AdminUser {
   id: string;
