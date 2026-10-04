@@ -2,7 +2,7 @@ from src.models.user import User, UserSession, OtpVerification, UserRole
 from src.models.admin import AdminUser, AdminSession, AdminPasswordReset, AdminAuditLog
 from src.models.pet import Pet, PetHealthProfile, CareTask, TaskCompletion, PetSpecies, PetSex, TaskCategory, PetActivity, ActivitySource
 from src.models.catalog import Category, CanonicalProduct, ProductVariant, Seller, SellerOffer, ProductImage, ProductReview
-from src.models.order import Order, OrderItem, OrderStatus, FulfillmentStage, InventoryReservation, ReorderSchedule
+from src.models.order import Order, OrderItem, OrderStatus, FulfillmentStage, InventoryReservation, ReorderSchedule, UserCartItem
 from src.models.vet import Clinic, Veterinarian, Appointment, AppointmentStatus, MedicalRecord
 from src.models.trainer import Trainer, TrainerSession, TrainerSessionStatus
 from src.models.boarding import BoardingCenter, BoardingBooking, BoardingBookingStatus
@@ -45,6 +45,7 @@ __all__ = [
     "FulfillmentStage",
     "InventoryReservation",
     "ReorderSchedule",
+    "UserCartItem",
     "Clinic",
     "Veterinarian",
     "Appointment",

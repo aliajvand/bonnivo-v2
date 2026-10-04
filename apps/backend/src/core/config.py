@@ -139,6 +139,8 @@ class Settings(BaseSettings):
                 violations.append("DEMO_MODE is enabled in production")
             if not self.COOKIE_SECURE:
                 violations.append("COOKIE_SECURE is False in production")
+            if not self.ZARINPAL_MERCHANT_ID or len(self.ZARINPAL_MERCHANT_ID.strip()) < 10:
+                violations.append("ZARINPAL_MERCHANT_ID is missing or invalid in production")
             if violations:
                 raise ValueError(
                     f"CRITICAL PRODUCTION SECURITY VIOLATIONS DETECTED: {', '.join(violations)}"

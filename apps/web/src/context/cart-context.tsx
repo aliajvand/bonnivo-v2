@@ -5,6 +5,8 @@ import { CartItem, SplitShipment, OrderConfirmation } from "@/types/cart";
 import { CatalogProduct, SellerOffer, ProductWeightVariant } from "@/types/catalog";
 import { mockCatalogProducts } from "@/data/mock-catalog";
 import { usePet } from "./pet-context";
+import { useAuth } from "./auth-context";
+import { fetchServerCart, syncServerCart, clearServerCart } from "@/lib/api/checkout";
 
 interface CartContextType {
   items: CartItem[];
@@ -33,64 +35,13 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-// Initial mock items matching the reference image ("Your Cart (3 items)")
-const initialSeedCartItems: CartItem[] = [
-  {
-    id: "cart-item-1",
-    productId: "prod-rc-adult-cat",
-    titleFa: "غذای خشک گربه رویال کنین مدل ادالت فیت ۲ کیلوگرم",
-    brand: "Royal Canin",
-    imageSrc: "/icons/food.svg",
-    unitPriceToman: 2490000,
-    discountedPriceToman: 2290000,
-    quantity: 1,
-    sellerId: "seller-1",
-    sellerName: "فروشگاه رویال پت (برنده بای‌باکس)",
-    leadTimeDays: 0,
-    assignedPetId: "pet-barfi",
-    assignedPetName: "برفی",
-    assignedPetAvatar: "/icons/cat.svg",
-  },
-  {
-    id: "cart-item-2",
-    productId: "prod-cat-treats",
-    titleFa: "تشویقی مدادی گربه وینستون با طعم مرغ و پنیر",
-    brand: "Winston",
-    imageSrc: "/icons/toys.svg",
-    unitPriceToman: 590000,
-    discountedPriceToman: undefined,
-    quantity: 2,
-    sellerId: "seller-1",
-    sellerName: "فروشگاه رویال پت (برنده بای‌باکس)",
-    leadTimeDays: 0,
-    assignedPetId: "pet-barfi",
-    assignedPetName: "برفی",
-    assignedPetAvatar: "/icons/cat.svg",
-  },
-  {
-    id: "cart-item-3",
-    productId: "prod-pet-toy-ball",
-    titleFa: "توپ تعاملی و صدادار مناسب سگ و گربه",
-    brand: "Petstages",
-    imageSrc: "/icons/toys.svg",
-    unitPriceToman: 950000,
-    discountedPriceToman: 820000,
-    quantity: 1,
-    sellerId: "seller-2",
-    sellerName: "پت سنتر ونک (ارسال مستقیم)",
-    leadTimeDays: 1,
-    assignedPetId: "pet-milo",
-    assignedPetName: "میلو",
-    assignedPetAvatar: "/icons/dog.svg",
-  },
-];
-
 const LOCAL_STORAGE_KEY = "bonnivo_cart_v1";
 const LOCAL_STORAGE_ORDER_KEY = "bonnivo_last_order_v1";
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const { pets, activePet } = usePet();
-  const [items, setItems] = useState<CartItem[]>(initialSeedCartItems);
+  const { isAuthenticated } = useAuth();
+  const [items, setItems] = useState<CartItem[]>([]);
   const [lastOrder, setLastOrderState] = useState<OrderConfirmation | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
 
@@ -100,7 +51,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed)) {
           setItems(parsed);
         }
       }
@@ -113,6 +64,39 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
     setIsHydrated(true);
   }, []);
+
+  // Fetch or sync server cart when user is authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchServerCart().then((res) => {
+        if (res.success && res.data && res.data.length > 0) {
+          const serverItems: CartItem[] = res.data.map((si) => ({
+            id: si.id,
+            productId: si.product_id,
+            offerId: si.offer_id,
+            titleFa: si.product_title,
+            brand: si.brand || "Bonnivo",
+            imageSrc: "/icons/food.svg",
+            unitPriceToman: si.unit_price_tomans,
+            quantity: si.quantity,
+            sellerId: si.offer_id,
+            sellerName: si.seller_name,
+            leadTimeDays: si.lead_time_days,
+            assignedPetId: si.pet_id || null,
+          }));
+          setItems(serverItems);
+        } else if (items.length > 0) {
+          syncServerCart(
+            items.map((i) => ({
+              offer_id: i.offerId || i.id,
+              quantity: i.quantity,
+              pet_id: i.assignedPetId || null,
+            }))
+          );
+        }
+      });
+    }
+  }, [isAuthenticated]);
 
   const setLastOrder = (order: OrderConfirmation | null) => {
     setLastOrderState(order);
@@ -127,7 +111,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Save to LocalStorage whenever items change
+  // Save to LocalStorage and sync to server whenever items change
   useEffect(() => {
     if (isHydrated) {
       try {
@@ -135,8 +119,20 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       } catch {
         // Ignore quota
       }
+      if (isAuthenticated) {
+        const timer = setTimeout(() => {
+          syncServerCart(
+            items.map((i) => ({
+              offer_id: i.offerId || i.id,
+              quantity: i.quantity,
+              pet_id: i.assignedPetId || null,
+            }))
+          );
+        }, 500);
+        return () => clearTimeout(timer);
+      }
     }
-  }, [items, isHydrated]);
+  }, [items, isHydrated, isAuthenticated]);
 
   // Aggregate quantity
   const itemsCount = useMemo(() => {
@@ -309,6 +305,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem(LOCAL_STORAGE_KEY);
     } catch {
       // Ignore
+    }
+    if (isAuthenticated) {
+      clearServerCart();
     }
   };
 

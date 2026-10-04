@@ -161,3 +161,65 @@ export async function verifyServerPayment(
   }
 }
 
+export interface ServerCartItem {
+  id: string;
+  offer_id: string;
+  product_id: string;
+  product_title: string;
+  brand?: string;
+  seller_name: string;
+  unit_price_tomans: number;
+  quantity: number;
+  pet_id?: string | null;
+  lead_time_days: number;
+}
+
+export async function fetchServerCart(
+  token?: string
+): Promise<{ success: boolean; data?: ServerCartItem[]; error?: string }> {
+  try {
+    const headers: Record<string, string> = { Accept: "application/json" };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    const res = await fetch(`${API_BASE}/checkout/cart`, { headers });
+    if (!res.ok) return { success: false, error: "Failed to fetch cart" };
+    const data = await res.json();
+    return { success: true, data };
+  } catch {
+    return { success: false, error: "Network error" };
+  }
+}
+
+export async function syncServerCart(
+  items: { offer_id: string; quantity: number; pet_id?: string | null }[],
+  token?: string
+): Promise<{ success: boolean; data?: ServerCartItem[]; error?: string }> {
+  try {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    const res = await fetch(`${API_BASE}/checkout/cart/sync`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ items }),
+    });
+    if (!res.ok) return { success: false, error: "Failed to sync cart" };
+    const data = await res.json();
+    return { success: true, data };
+  } catch {
+    return { success: false, error: "Network error" };
+  }
+}
+
+export async function clearServerCart(token?: string): Promise<{ success: boolean }> {
+  try {
+    const headers: Record<string, string> = { Accept: "application/json" };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    const res = await fetch(`${API_BASE}/checkout/cart`, { method: "DELETE", headers });
+    return { success: res.ok };
+  } catch {
+    return { success: false };
+  }
+}
+
